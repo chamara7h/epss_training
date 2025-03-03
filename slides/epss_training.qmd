@@ -5,14 +5,14 @@ format:
     width: 1600
     height: 900
     logo: "images/logo.png"
-    footer: "[Demand Forecasting Models for Contraceptive Supply Chain](https://rstudio-conf-2022.github.io/get-started-quarto/)"
-    css: ["theme/theme.css"]
+    footer: "[Demand Forecasting Models for Contraceptive Supply Chain](https://chamara7h.github.io/lab/forecasting/first-post/)"
+    css: theme.css
     theme: simple
     echo: true
     title-slide-logo: "images/logo.png"
-  pdf: 
-    prefer-html: true
 editor: source
+execute:
+  warning: false
 ---   
 
 
@@ -63,7 +63,7 @@ options(knitr.graphics.auto_pdf = TRUE)
 
 You can find the workshop materials [here](https://chamara7h.github.io/lab/).
 
-*Note*: These materials are based on [F4SG: Africast training](https://workshop.f4sg.org/africast/) and [F4SG Learning Labs trainings](https://www.youtube.com/watch?v=VCiDhRxNxgc&list=PLQMuwuCypmehClRpxqOzuiRKyPmeQTJsz).
+*Note*: These materials are based on [A Novel Hybrid Approach to Contraceptive Demand Forecasting Research](https://arxiv.org/abs/2502.09685), [F4SG: Africast training](https://workshop.f4sg.org/africast/) and [F4SG Learning Labs trainings](https://www.youtube.com/watch?v=VCiDhRxNxgc&list=PLQMuwuCypmehClRpxqOzuiRKyPmeQTJsz).
 
 <br>
 
@@ -100,8 +100,17 @@ An estimation of the future based on all of the information available at the tim
 
 ```{r}
 #| echo: false
+#| results: hide 
 
+install.packages('reticulate')
+install.packages('ggplot2')
+install.packages('forecast')
+install.packages('countdown')
+install.packages('gridExtra')
+```
 
+```{r}
+#| echo: false
 library(ggplot2)
 
 # Create a sample time series dataset with 50 training and 5 testing data points
@@ -172,6 +181,7 @@ Read more at [Demand forecasting for executives and professionals](https://dfep.
 We use the `fpp3` package in this workshop, which provides all the necessary packages for data manipulation, plotting, and forecasting.
 
 ```{r}
+#| results: hide 
 
 # Define required packages
 packages <- c("tidyverse", "fable", "tsibble", "feasts", 'zoo')
@@ -282,7 +292,7 @@ item_ids <- med_tsb |>
   count_gaps() |> 
   group_by(hub_id, product_id) |> 
   summarise(.n = max(.n), .groups = 'drop') |> 
-  filter(.n  < 2) |> 
+  filter(.n  > 1) |> 
   mutate(id = paste0(hub_id,'-',product_id)) |> 
   pull(id) # filtering the item ids
 
@@ -290,7 +300,7 @@ med_tsb_filter <- med_tsb |>
   mutate(id = paste0(hub_id,'-',product_id)) |> 
   group_by(hub_id, product_id) |>
   mutate(num_observations = n()) |> 
-  filter(id %in% item_ids & num_observations >59) |>   # we have cold starts and discontinuations. 
+  filter(!id %in% item_ids & num_observations >59) |>   # we have cold starts and discontinuations. 
   fill_gaps(quantity_issued = 1e-6, .full = TRUE) |>   # Replace NAs with a small value
   select(-id, -num_observations) |> 
   mutate(quantity_issued = if_else(is.na(quantity_issued), 
@@ -1366,7 +1376,6 @@ grid.arrange(plot_good, plot_poor, ncol = 1)
 #| echo: false
 
 # Load required libraries
-library(ggplot2)
 library(gridExtra)
 
 # Generate the data

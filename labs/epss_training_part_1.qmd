@@ -1,7 +1,5 @@
 ---
 title: "Demand Forecasting Models for Contraceptive Supply Chain"
-author: "Bahman Rostami-Tabar"
-
 format:
   html:
     toc: true
@@ -40,7 +38,7 @@ suppressWarnings(suppressMessages({
 # read data
 
 med_qty <- read.csv('data/med_qty.csv')
-med_qty |> head(10)
+med_qty |> head(7)
 
 ```
 
@@ -52,7 +50,7 @@ Which function do you use to see if there is any missing value?
 ```{r}
 # check NAs
 
-anyNA(med_qty)
+med_qty |> anyNA()
 
 ```
 
@@ -65,6 +63,9 @@ anyNA(med_qty)
 med_qty |>  
   duplicated() |>  
   sum() 
+
+med_qty |> 
+  distinct()
 
 ```
 
@@ -96,11 +97,11 @@ med_tsb
 
 ```{r}
 
-has_gaps(med_tsb) |> head(3) #check gaps
+has_gaps(med_tsb) |> head(10) #check gaps
 
-scan_gaps(med_tsb) |> head(3) # show gaps
+scan_gaps(med_tsb) |> head(13) # show gaps
 
-count_gaps(med_tsb) |> head(3) # count gaps
+count_gaps(med_tsb) |> head(13) # count gaps
 
 ```
 
@@ -133,7 +134,7 @@ med_tsb_filter <- med_tsb |>
   group_by(hub_id, product_id) |>
   mutate(num_observations = n()) |> 
   filter(id %in% item_ids & num_observations >59) |>   # we have cold starts and discontinuations. 
-  fill_gaps(quantity_issued = 1e-6, .full = TRUE) |>   # Replace NAs with a small value
+  fill_gaps(quantity_issued = NA, .full = TRUE) |>   # Replace NAs with a small value
   select(-id, -num_observations) |> 
   mutate(quantity_issued = if_else(is.na(quantity_issued), 
                                    exp(
@@ -150,7 +151,7 @@ We can use the `filter()` function to select rows.
 ```{r}
 
 med_tsb |> 
-  filter(hub_id == 'hub_10') 
+  filter(hub_id == 'hub_10' | hub_id == 'hub_1') 
 
 ```
 
@@ -190,6 +191,7 @@ We can use `index_by()` function to group over index We can use the `summarise()
 med_tsb |> 
   mutate(quarter = yearquarter(date)) |> 
   index_by(quarter) |> 
+  group_by(hub_id, product_id) |> 
   summarise(total_quantity_issues = sum(quantity_issued))
 
 ```
